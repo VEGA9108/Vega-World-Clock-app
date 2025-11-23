@@ -41,30 +41,6 @@
       --shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
     }
 
-    body[data-theme="twitch"] {
-      --bg: #0d0b1a;
-      --bg-alt: #0a0813;
-      --panel: rgba(20, 16, 38, 0.9);
-      --border: rgba(145, 70, 255, 0.35);
-      --text: #f1ecff;
-      --muted: #b7a8ff;
-      --accent: #9146ff;
-      --accent-contrast: #0a0416;
-      --shadow: 0 30px 60px rgba(50, 20, 100, 0.55);
-    }
-
-    body[data-theme="youtube"] {
-      --bg: #0c0a0a;
-      --bg-alt: #090707;
-      --panel: rgba(22, 18, 18, 0.92);
-      --border: rgba(255, 0, 0, 0.35);
-      --text: #ffecec;
-      --muted: #e6b3b3;
-      --accent: #ff0033;
-      --accent-contrast: #140000;
-      --shadow: 0 30px 60px rgba(60, 10, 10, 0.6);
-    }
-
     * { box-sizing: border-box; }
 
     body {
@@ -226,7 +202,6 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      flex-wrap: wrap;
     }
 
     .theme-icon-btn {
@@ -270,20 +245,6 @@
       box-shadow: 0 15px 30px rgba(15, 255, 75, 0.3);
     }
 
-    body[data-theme="twitch"] .theme-icon-btn {
-      background: linear-gradient(135deg, rgba(30, 20, 60, 0.95), rgba(20, 14, 44, 0.9));
-      border-color: rgba(145, 70, 255, 0.5);
-      color: #cfa7ff;
-      box-shadow: 0 15px 30px rgba(145, 70, 255, 0.35);
-    }
-
-    body[data-theme="youtube"] .theme-icon-btn {
-      background: linear-gradient(135deg, rgba(30, 10, 10, 0.95), rgba(20, 8, 8, 0.9));
-      border-color: rgba(255, 0, 0, 0.45);
-      color: #ff6b7a;
-      box-shadow: 0 15px 30px rgba(255, 0, 0, 0.35);
-    }
-
     .auto-toggle {
       border-radius: 999px;
       padding: 10px 16px;
@@ -322,7 +283,6 @@
     .auto-switch {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .ghost-btn {
@@ -746,8 +706,6 @@
           <div class="auto-switch">
             <button type="button" class="auto-toggle" id="theme-auto-btn">AUTO</button>
             <button type="button" class="auto-toggle" id="theme-chzzk-btn">CHZZK</button>
-            <button type="button" class="auto-toggle" id="theme-twitch-btn">Twitch</button>
-            <button type="button" class="auto-toggle" id="theme-youtube-btn">YouTube</button>
           </div>
         </div>
       </div>
@@ -866,8 +824,6 @@
     const themeIconBtn = document.getElementById('theme-icon-btn');
     const themeAutoBtn = document.getElementById('theme-auto-btn');
     const themeChzzkBtn = document.getElementById('theme-chzzk-btn');
-    const themeTwitchBtn = document.getElementById('theme-twitch-btn');
-    const themeYoutubeBtn = document.getElementById('theme-youtube-btn');
     const openFullscreenBtn = document.getElementById('open-fullscreen');
     const fullscreenOverlay = document.getElementById('fullscreen');
     const closeFullscreenBtn = document.getElementById('close-fullscreen');
@@ -1163,7 +1119,7 @@
       });
     }
 
-    const themeCycle = ['light', 'dark', 'chzzk', 'twitch', 'youtube'];
+    const themeCycle = ['light', 'dark', 'chzzk'];
 
     function nextTheme(current) {
       const idx = themeCycle.indexOf(current);
@@ -1175,8 +1131,7 @@
       const now = new Date();
       const hour = now.getHours();
       let activeTheme = settings.theme;
-      const autoEligible = ['light', 'dark'];
-      if (settings.autoTheme && autoEligible.includes(activeTheme)) {
+      if (settings.autoTheme && activeTheme !== 'chzzk') {
         activeTheme = hour >= 6 && hour < 18 ? 'light' : 'dark';
       }
       document.body.dataset.theme = activeTheme;
@@ -1184,7 +1139,7 @@
     }
 
     function updateThemeButtons(activeTheme) {
-      const iconMap = { light: '☀', dark: '🌙', chzzk: '⚡', twitch: '🎮', youtube: '▶' };
+      const iconMap = { light: '☀', dark: '🌙', chzzk: '⚡' };
       if (themeIconBtn) {
         themeIconBtn.textContent = iconMap[activeTheme] || '☀';
       }
@@ -1193,12 +1148,6 @@
       }
       if (themeChzzkBtn) {
         themeChzzkBtn.classList.toggle('active', settings.theme === 'chzzk');
-      }
-      if (themeTwitchBtn) {
-        themeTwitchBtn.classList.toggle('active', settings.theme === 'twitch');
-      }
-      if (themeYoutubeBtn) {
-        themeYoutubeBtn.classList.toggle('active', settings.theme === 'youtube');
       }
       if (fsThemeIconBtn) {
         fsThemeIconBtn.textContent = iconMap[activeTheme] || '☀';
@@ -1266,7 +1215,7 @@
       if (themeAutoBtn) {
         themeAutoBtn.addEventListener('click', () => {
           settings.autoTheme = !settings.autoTheme;
-          if (settings.autoTheme && !['light', 'dark'].includes(settings.theme)) settings.theme = 'light';
+          if (settings.autoTheme) settings.theme = settings.theme === 'chzzk' ? 'light' : settings.theme;
           applyTheme();
         });
       }
@@ -1274,20 +1223,6 @@
         themeChzzkBtn.addEventListener('click', () => {
           settings.autoTheme = false;
           settings.theme = 'chzzk';
-          applyTheme();
-        });
-      }
-      if (themeTwitchBtn) {
-        themeTwitchBtn.addEventListener('click', () => {
-          settings.autoTheme = false;
-          settings.theme = 'twitch';
-          applyTheme();
-        });
-      }
-      if (themeYoutubeBtn) {
-        themeYoutubeBtn.addEventListener('click', () => {
-          settings.autoTheme = false;
-          settings.theme = 'youtube';
           applyTheme();
         });
       }
