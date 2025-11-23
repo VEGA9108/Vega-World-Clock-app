@@ -465,14 +465,14 @@
     .fullscreen-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.85), var(--bg) 70%), var(--bg-alt);
+      background: var(--bg);
       backdrop-filter: blur(18px);
       display: none;
       z-index: 1000;
       align-items: center;
       justify-content: center;
       padding: clamp(16px, 4vw, 48px);
-      transition: background 0.4s ease;
+      transition: background 0.2s ease;
     }
 
     .fullscreen-overlay.visible {
@@ -526,11 +526,19 @@
     }
 
     body[data-theme="dark"] .fullscreen-overlay {
-      background: radial-gradient(circle at 10% 20%, rgba(9,13,22,0.9), #05070f 75%), #05070f;
+      background: #05070f;
     }
 
     body[data-theme="chzzk"] .fullscreen-overlay {
       background: #010509;
+    }
+
+    body[data-theme="twitch"] .fullscreen-overlay {
+      background: #0a0813;
+    }
+
+    body[data-theme="youtube"] .fullscreen-overlay {
+      background: #090707;
     }
 
     .fs-base {
