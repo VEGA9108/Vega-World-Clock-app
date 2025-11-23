@@ -343,6 +343,30 @@
       box-shadow: 0 10px 25px rgba(15,255,75,0.35);
     }
 
+    body[data-theme="twitch"] .auto-toggle {
+      background: rgba(18, 14, 30, 0.9);
+      color: #c8b9ff;
+      border-color: rgba(145,70,255,0.25);
+    }
+
+    body[data-theme="twitch"] .auto-toggle.active {
+      background: #9146ff;
+      color: #0a0416;
+      box-shadow: 0 10px 25px rgba(145,70,255,0.35);
+    }
+
+    body[data-theme="youtube"] .auto-toggle {
+      background: rgba(20, 14, 14, 0.9);
+      color: #f7d6d6;
+      border-color: rgba(255,0,0,0.25);
+    }
+
+    body[data-theme="youtube"] .auto-toggle.active {
+      background: #ff0033;
+      color: #140000;
+      box-shadow: 0 10px 25px rgba(255,0,0,0.35);
+    }
+
     .auto-switch {
       display: flex;
       gap: 8px;
@@ -655,6 +679,14 @@
     body[data-theme="chzzk"] .fs-fav-card {
       background: rgba(4, 10, 8, 0.85);
       border-color: rgba(15,255,75,0.35);
+    }
+    body[data-theme="twitch"] .fs-fav-card {
+      background: rgba(18, 14, 30, 0.9);
+      border-color: rgba(145,70,255,0.35);
+    }
+    body[data-theme="youtube"] .fs-fav-card {
+      background: rgba(20, 14, 14, 0.9);
+      border-color: rgba(255,0,0,0.35);
     }
 
     .fs-fav-city {
