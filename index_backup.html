@@ -1,0 +1,463 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>세계 시계</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --bg-alt: #ffffff;
+      --panel: rgba(255, 255, 255, 0.86);
+      --border: rgba(13, 19, 33, 0.08);
+      --text: #0f1320;
+      --muted: #6b6f80;
+      --accent: #0a84ff;
+      --accent-contrast: #ffffff;
+      --card-radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 19, 32, 0.08);
+    }
+
+    body[data-theme="dark"] {
+      --bg: #080c14;
+      --bg-alt: #0f141f;
+      --panel: rgba(19, 23, 34, 0.94);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f6f8ff;
+      --muted: #a0a6c4;
+      --accent: #4cb9ff;
+      --accent-contrast: #050a12;
+      --shadow: 0 25px 50px rgba(5, 7, 12, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.9), var(--bg) 65%), var(--bg-alt);
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    body[data-theme="dark"] {
+      background: #090d16;
+    }
+
+    header {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 20px 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    body[data-theme="dark"] .eyebrow {
+      background: rgba(12, 16, 28, 0.75);
+    }
+
+    h1 {
+      margin: 18px 0 4px;
+      font-size: clamp(44px, 6vw, 72px);
+      letter-spacing: -2px;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .base-clock {
+      margin-top: 32px;
+      padding: 32px;
+      border-radius: 28px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+    }
+
+    .base-clock .label {
+      font-size: 15px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .base-clock .time {
+      font-size: clamp(42px, 7vw, 64px);
+      font-weight: 600;
+      letter-spacing: -1px;
+    }
+
+    .base-clock .sub {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .controls {
+      margin-top: 20px;
+      padding: 20px 24px;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 180px;
+    }
+
+    .control-label {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .segment {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(15, 19, 32, 0.04);
+      border: 1px solid rgba(15,19,32,0.08);
+    }
+
+    body[data-theme="dark"] .segment {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .segment button {
+      border: none;
+      background: transparent;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .segment button.active {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      box-shadow: 0 10px 25px rgba(10, 132, 255, 0.3);
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 20px auto 60px;
+      padding: 0 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      padding: 20px;
+      border-radius: var(--card-radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    .card.active {
+      border-color: rgba(10,132,255,0.35);
+      box-shadow: 0 25px 60px rgba(10,132,255,0.2);
+    }
+
+    .country { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+    .city { margin: 4px 0 0; font-size: 21px; font-weight: 700; }
+    .time { font-size: 30px; font-weight: 600; margin: 16px 0 4px; }
+    .date { margin: 0; font-size: 14px; color: var(--muted); }
+
+    .offset {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      color: var(--accent);
+      background: rgba(10, 132, 255, 0.12);
+    }
+
+    .offset.neutral { color: #60626e; background: rgba(0,0,0,0.06); }
+    .offset.negative { color: #e45c63; background: rgba(228, 92, 99, 0.12); }
+    body[data-theme="dark"] .offset.neutral { color: #c3c8ff; background: rgba(255,255,255,0.1); }
+    body[data-theme="dark"] .offset.negative { color: #ff9c9c; background: rgba(255,110,110,0.18); }
+
+    .offset.base {
+      color: var(--accent-contrast);
+      background: var(--accent);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 0 20px 40px;
+    }
+
+    @media (max-width: 640px) {
+      .controls { flex-direction: column; }
+      .base-clock { padding: 24px; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <header>
+    <span class="eyebrow">터치 친화 · 애플 감성 UI</span>
+    <h1>세계 시계</h1>
+    <p class="lead">한국 기준으로 주요 도시의 시간을 살펴보고, 카드 하나로 기준 시간과 시차를 변경해 보세요.</p>
+
+    <section class="base-clock">
+      <span class="label">기준 시간</span>
+      <div class="time" id="base-time">00:00:00</div>
+      <div class="sub" id="base-date">0000년 00월 00일(요일) · 서울 · 대한민국</div>
+      <div class="sub" id="base-detail">카드를 탭하면 기준이 바뀝니다.</div>
+    </section>
+
+    <section class="controls">
+      <div class="control-group">
+        <span class="control-label">시간 표기</span>
+        <div class="segment" id="format-toggle">
+          <button type="button" class="active" data-format="24">24시간</button>
+          <button type="button" data-format="12">12시간</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">테마</span>
+        <div class="segment" id="theme-toggle">
+          <button type="button" class="active" data-theme="light">라이트</button>
+          <button type="button" data-theme="dark">다크</button>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="grid" id="clock-grid"></section>
+  </main>
+
+  <footer>세계 시계는 Intl API를 사용해 각 도시의 실시간 날짜와 시간을 보여줍니다.</footer>
+
+  <script>
+    const cities = [
+      { country: '대한민국', city: '서울', tz: 'Asia/Seoul' },
+      { country: '미국', city: '뉴욕', tz: 'America/New_York' },
+      { country: '미국', city: '로스앤젤레스', tz: 'America/Los_Angeles' },
+      { country: '캐나다', city: '토론토', tz: 'America/Toronto' },
+      { country: '영국', city: '런던', tz: 'Europe/London' },
+      { country: '프랑스', city: '파리', tz: 'Europe/Paris' },
+      { country: '독일', city: '베를린', tz: 'Europe/Berlin' },
+      { country: '아랍에미리트', city: '두바이', tz: 'Asia/Dubai' },
+      { country: '인도', city: '뉴델리', tz: 'Asia/Kolkata' },
+      { country: '중국', city: '베이징', tz: 'Asia/Shanghai' },
+      { country: '싱가포르', city: '싱가포르', tz: 'Asia/Singapore' },
+      { country: '일본', city: '도쿄', tz: 'Asia/Tokyo' },
+      { country: '호주', city: '시드니', tz: 'Australia/Sydney' }
+    ];
+
+    const baseTimeEl = document.getElementById('base-time');
+    const baseDateEl = document.getElementById('base-date');
+    const baseDetailEl = document.getElementById('base-detail');
+    const gridEl = document.getElementById('clock-grid');
+    const formatToggle = document.getElementById('format-toggle');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    const settings = { hourFormat: '24', theme: 'light' };
+    let baseIndex = cities.findIndex(city => city.tz === 'Asia/Seoul');
+    if (baseIndex < 0) baseIndex = 0;
+
+    function parseOffset(label) {
+      const match = /GMT([+-])(\d{1,2})(?::?(\d{2}))?/.exec(label);
+      if (!match) return 0;
+      const sign = match[1] === '-' ? -1 : 1;
+      const hours = parseInt(match[2], 10);
+      const minutes = parseInt(match[3] || '0', 10);
+      return sign * (hours * 60 + minutes);
+    }
+
+    function offsetMinutes(tz, date) {
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'shortOffset'
+      });
+      const parts = fmt.formatToParts(date);
+      const tzName = parts.find(p => p.type === 'timeZoneName');
+      return tzName ? parseOffset(tzName.value) : 0;
+    }
+
+    function formatDate(tz, date) {
+      return new Intl.DateTimeFormat('ko-KR', {
+        timeZone: tz,
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      }).format(date);
+    }
+
+    function formatTime(tz, date) {
+      const formatter = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: settings.hourFormat === '12'
+      });
+      return formatter.format(date);
+    }
+
+    function diffLabel(diffMinutes, baseCity) {
+      if (diffMinutes === 0) return '기준과 동일';
+      const abs = Math.abs(diffMinutes);
+      const hours = Math.floor(abs / 60);
+      const mins = abs % 60;
+      let text = hours ? `${hours}시간` : '';
+      if (mins) text += ` ${mins}분`;
+      if (!text.trim()) text = '0분';
+      return diffMinutes > 0 ? `${baseCity}보다 ${text.trim()} 빠름` : `${baseCity}보다 ${text.trim()} 느림`;
+    }
+
+    function createCard(city) {
+      const card = document.createElement('article');
+      card.className = 'card';
+
+      const country = document.createElement('p');
+      country.className = 'country';
+      country.textContent = city.country;
+
+      const name = document.createElement('h3');
+      name.className = 'city';
+      name.textContent = city.city;
+
+      const offset = document.createElement('span');
+      offset.className = 'offset';
+      offset.dataset.offset = 'value';
+
+      const time = document.createElement('div');
+      time.className = 'time';
+      time.dataset.time = 'value';
+
+      const date = document.createElement('p');
+      date.className = 'date';
+      date.dataset.date = 'value';
+
+      card.append(offset, country, name, time, date);
+      return card;
+    }
+
+    function renderCards() {
+      gridEl.innerHTML = '';
+      cities.forEach((city, index) => {
+        const card = createCard(city);
+        card.addEventListener('click', () => {
+          baseIndex = index;
+          update();
+        });
+        gridEl.appendChild(card);
+      });
+    }
+
+    function update() {
+      const now = new Date();
+      const baseCity = cities[baseIndex];
+      const baseOffset = offsetMinutes(baseCity.tz, now);
+
+      baseTimeEl.textContent = formatTime(baseCity.tz, now);
+      baseDateEl.textContent = `${formatDate(baseCity.tz, now)} · ${baseCity.city} · ${baseCity.country}`;
+      baseDetailEl.textContent = `${baseCity.city} 시간을 기준으로 전 세계 시차를 비교합니다.`;
+
+      [...gridEl.children].forEach((card, index) => {
+        const city = cities[index];
+        const timeEl = card.querySelector('[data-time]');
+        const dateEl = card.querySelector('[data-date]');
+        const offsetEl = card.querySelector('[data-offset]');
+
+        timeEl.textContent = formatTime(city.tz, now);
+        dateEl.textContent = formatDate(city.tz, now);
+
+        const diff = offsetMinutes(city.tz, now) - baseOffset;
+        card.classList.toggle('active', index === baseIndex);
+        offsetEl.className = 'offset';
+
+        if (index === baseIndex) {
+          offsetEl.textContent = '기준 시간';
+          offsetEl.classList.add('base');
+        } else {
+          offsetEl.textContent = diffLabel(diff, baseCity.city);
+          if (diff === 0) {
+            offsetEl.classList.add('neutral');
+          } else if (diff < 0) {
+            offsetEl.classList.add('negative');
+          }
+        }
+      });
+    }
+
+    function initSegments() {
+      formatToggle.addEventListener('click', event => {
+        const target = event.target.closest('button[data-format]');
+        if (!target || target.classList.contains('active')) return;
+        settings.hourFormat = target.dataset.format;
+        formatToggle.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === target));
+        update();
+      });
+
+      themeToggle.addEventListener('click', event => {
+        const target = event.target.closest('button[data-theme]');
+        if (!target || target.classList.contains('active')) return;
+        settings.theme = target.dataset.theme;
+        document.body.dataset.theme = settings.theme;
+        themeToggle.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === target));
+      });
+    }
+
+    function startClock() {
+      renderCards();
+      initSegments();
+      update();
+      setInterval(update, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', startClock);
+  </script>
+</body>
+</html>

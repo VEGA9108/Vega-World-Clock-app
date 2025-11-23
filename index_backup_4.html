@@ -1,0 +1,1074 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>세계 시계</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --bg-alt: #ffffff;
+      --panel: rgba(255, 255, 255, 0.86);
+      --border: rgba(13, 19, 33, 0.08);
+      --text: #0f1320;
+      --muted: #6b6f80;
+      --accent: #0a84ff;
+      --accent-contrast: #ffffff;
+      --card-radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 19, 32, 0.08);
+    }
+
+    body[data-theme="dark"] {
+      --bg: #080c14;
+      --bg-alt: #0f141f;
+      --panel: rgba(19, 23, 34, 0.94);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f6f8ff;
+      --muted: #a0a6c4;
+      --accent: #4cb9ff;
+      --accent-contrast: #050a12;
+      --shadow: 0 25px 50px rgba(5, 7, 12, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.9), var(--bg) 65%), var(--bg-alt);
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    body[data-theme="dark"] {
+      background: #090d16;
+    }
+
+    header {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 20px 18px;
+    }
+
+    h1 {
+      margin: 18px 0 4px;
+      font-size: clamp(44px, 6vw, 72px);
+      letter-spacing: -2px;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .base-clock {
+      margin-top: 32px;
+      padding: 32px;
+      border-radius: 28px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+    }
+
+    .base-clock .label {
+      font-size: 15px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .base-clock .time {
+      font-size: clamp(42px, 7vw, 64px);
+      font-weight: 600;
+      letter-spacing: -1px;
+    }
+
+    .base-clock .sub {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .controls {
+      margin-top: 20px;
+      padding: 20px 24px;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .control-label {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .segment {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(15, 19, 32, 0.04);
+      border: 1px solid rgba(15,19,32,0.08);
+      width: 100%;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    body[data-theme="dark"] .segment {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .segment button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .segment button.active {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      box-shadow: 0 10px 25px rgba(10, 132, 255, 0.3);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.88);
+      color: var(--text);
+      font-size: 15px;
+      box-shadow: inset 0 1px 2px rgba(15, 19, 32, 0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: rgba(10, 132, 255, 0.4);
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+    }
+
+    body[data-theme="dark"] .search-input {
+      background: rgba(15, 17, 27, 0.85);
+      color: var(--text);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-icon-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,19,32,0.12);
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,244,255,0.9));
+      box-shadow: 0 10px 25px rgba(15, 19, 32, 0.14);
+      font-size: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .theme-icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 15px 30px rgba(10, 132, 255, 0.25);
+    }
+
+    .theme-icon-btn.compact {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      font-size: 20px;
+    }
+
+    body[data-theme="dark"] .theme-icon-btn {
+      background: linear-gradient(135deg, rgba(20,22,32,0.95), rgba(12,14,22,0.9));
+      border-color: rgba(255,255,255,0.08);
+      color: #f6f8ff;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+    }
+
+    .auto-toggle {
+      border-radius: 999px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.82);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .auto-toggle.active {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      box-shadow: 0 8px 18px rgba(10,132,255,0.3);
+    }
+
+    body[data-theme="dark"] .auto-toggle {
+      background: rgba(15,17,25,0.85);
+      color: #c7cbe0;
+    }
+
+    .ghost-btn {
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.82);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ghost-btn:hover {
+      background: rgba(10, 132, 255, 0.08);
+      box-shadow: 0 8px 20px rgba(10, 132, 255, 0.2);
+    }
+
+    body[data-theme="dark"] .ghost-btn {
+      background: rgba(15, 17, 25, 0.85);
+      color: #e8ecff;
+    }
+
+
+    main {
+      max-width: 1120px;
+      margin: 20px auto 60px;
+      padding: 0 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      padding: 26px 20px 20px;
+      border-radius: var(--card-radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    .card.active {
+      border-color: rgba(10,132,255,0.35);
+      box-shadow: 0 25px 60px rgba(10,132,255,0.2);
+    }
+
+    .country { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+    .city { margin: 4px 0 0; font-size: 21px; font-weight: 700; }
+    .time { font-size: 30px; font-weight: 600; margin: 16px 0 4px; }
+    .date { margin: 0; font-size: 14px; color: var(--muted); }
+
+    .offset {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      color: var(--accent);
+      background: rgba(10, 132, 255, 0.12);
+    }
+
+    .offset.neutral { color: #60626e; background: rgba(0,0,0,0.06); }
+    .offset.negative { color: #e45c63; background: rgba(228, 92, 99, 0.12); }
+    body[data-theme="dark"] .offset.neutral { color: #c3c8ff; background: rgba(255,255,255,0.1); }
+    body[data-theme="dark"] .offset.negative { color: #ff9c9c; background: rgba(255,110,110,0.18); }
+
+    .offset.base {
+      color: var(--accent-contrast);
+      background: var(--accent);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .favorite-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(15, 19, 32, 0.08);
+      background: rgba(255,255,255,0.85);
+      color: #f0a500;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(15, 19, 32, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .favorite-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 19, 32, 0.2);
+    }
+
+    body[data-theme="dark"] .favorite-btn {
+      background: rgba(10, 12, 20, 0.9);
+      border-color: rgba(255,255,255,0.1);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+      color: #ffd977;
+    }
+
+    .card.favorite {
+      border-color: rgba(255, 198, 75, 0.55);
+    }
+
+    .card.hidden {
+      display: none;
+    }
+
+    .fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.85), var(--bg) 70%), var(--bg-alt);
+      backdrop-filter: blur(18px);
+      display: none;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      transition: background 0.4s ease;
+    }
+
+    .fullscreen-overlay.visible {
+      display: flex;
+    }
+
+    .fullscreen-content {
+      width: min(1200px, 90vw);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 32px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.35);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      backdrop-filter: blur(20px);
+      color: var(--text);
+    }
+
+    .close-fullscreen {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      border: none;
+      background: rgba(0,0,0,0.06);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 2;
+      pointer-events: auto;
+    }
+
+    .close-fullscreen::before {
+      content: '✕';
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    body[data-theme="dark"] .fullscreen-overlay {
+      background: radial-gradient(circle at 10% 20%, rgba(9,13,22,0.9), #05070f 75%), #05070f;
+    }
+
+    .fs-base {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .fs-base-label {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      opacity: 0.75;
+    }
+
+    .fs-base-location {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .fs-base-time {
+      font-size: clamp(72px, 20vw, 150px);
+      font-weight: 700;
+      letter-spacing: -2px;
+      color: var(--text);
+    }
+
+    .fs-base-date {
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .fs-favorites {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .fs-fav-card {
+      min-width: 180px;
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.8);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    body[data-theme="dark"] .fs-fav-card {
+      background: rgba(10, 12, 20, 0.7);
+    }
+
+    .fs-fav-city {
+      margin: 6px 0 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--fs-text, var(--text));
+    }
+
+    .fs-fav-time {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 8px 0;
+      color: var(--fs-text, var(--text));
+    }
+
+    .period {
+      font-size: 0.55em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 10px;
+      font-weight: 600;
+    }
+
+    .fs-toolbar {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .fs-fav-meta {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .fs-empty {
+      margin: 0;
+      text-align: center;
+      color: var(--fs-text, var(--muted));
+      opacity: 0.7;
+      font-size: 15px;
+    }
+
+
+    body.no-scroll {
+      overflow: hidden;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 0 20px 40px;
+    }
+
+    @media (max-width: 640px) {
+      .controls { grid-template-columns: 1fr; }
+      .base-clock { padding: 24px; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+    <header>
+    <h1>세계 시계</h1>
+    <p class="lead">주요 도시의 시간을 살펴보고, 시차를 확인해 보세요.</p>
+
+    <section class="base-clock">
+      <span class="label">기준 시간</span>
+      <div class="time" id="base-time">00:00:00</div>
+      <div class="sub" id="base-date">0000년 00월 00일(요일) · 서울 · 대한민국</div>
+      <div class="sub" id="base-detail">카드를 탭하면 기준이 바뀝니다.</div>
+    </section>
+
+    <section class="controls">
+      <div class="control-group">
+        <span class="control-label">시간 표기</span>
+        <div class="segment" id="format-toggle">
+          <button type="button" class="active" data-format="24">24시간</button>
+          <button type="button" data-format="12">12시간</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">테마</span>
+        <div class="theme-switch">
+          <button type="button" class="theme-icon-btn" id="theme-icon-btn" aria-label="테마 전환">☀</button>
+          <button type="button" class="auto-toggle" id="theme-auto-btn">AUTO</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">도시 검색</span>
+        <input type="search" id="city-search" class="search-input" placeholder="도시나 국가 입력" aria-label="도시 검색" autocomplete="off" />
+      </div>
+      <div class="control-group">
+        <span class="control-label">화면</span>
+        <button type="button" class="ghost-btn" id="open-fullscreen">전체 화면 모드</button>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="grid" id="clock-grid"></section>
+  </main>
+  <section class="fullscreen-overlay" id="fullscreen" aria-hidden="true">
+    <div class="fullscreen-content">
+      <button type="button" class="close-fullscreen" id="close-fullscreen" aria-label="전체 화면 종료"></button>
+      <div class="fs-toolbar">
+        <button type="button" class="theme-icon-btn compact" id="fs-theme-icon-btn" aria-label="테마 전환">☀</button>
+      </div>
+      <div class="fs-base">
+        <span class="fs-base-label">기준 시간</span>
+        <span class="fs-base-location" id="fs-base-location">서울 · 대한민국</span>
+        <span class="fs-base-time" id="fs-base-time">00:00:00</span>
+        <span class="fs-base-date" id="fs-base-date">0000년 00월 00일 (요일)</span>
+      </div>
+      <div class="fs-favorites" id="fs-favorites"></div>
+      <p class="fs-empty" id="fs-empty">즐겨찾기한 도시가 없습니다. 카드의 별 버튼으로 추가해 보세요.</p>
+    </div>
+  </section>
+
+  <footer>세계 시계는 Intl API를 사용해 각 도시의 실시간 날짜와 시간을 보여줍니다.</footer>
+
+  <script>
+    const cities = [
+      { country: '대한민국', city: '서울', tz: 'Asia/Seoul' },
+      { country: '일본', city: '도쿄', tz: 'Asia/Tokyo' },
+      { country: '중국', city: '베이징', tz: 'Asia/Shanghai' },
+      { country: '홍콩', city: '홍콩', tz: 'Asia/Hong_Kong' },
+      { country: '대만', city: '타이베이', tz: 'Asia/Taipei' },
+      { country: '싱가포르', city: '싱가포르', tz: 'Asia/Singapore' },
+      { country: '말레이시아', city: '쿠알라룸푸르', tz: 'Asia/Kuala_Lumpur' },
+      { country: '태국', city: '방콕', tz: 'Asia/Bangkok' },
+      { country: '베트남', city: '하노이', tz: 'Asia/Ho_Chi_Minh' },
+      { country: '인도네시아', city: '자카르타', tz: 'Asia/Jakarta' },
+      { country: '필리핀', city: '마닐라', tz: 'Asia/Manila' },
+      { country: '인도', city: '뉴델리', tz: 'Asia/Kolkata' },
+      { country: '스리랑카', city: '콜롬보', tz: 'Asia/Colombo' },
+      { country: '아랍에미리트', city: '두바이', tz: 'Asia/Dubai' },
+      { country: '카타르', city: '도하', tz: 'Asia/Qatar' },
+      { country: '사우디아라비아', city: '리야드', tz: 'Asia/Riyadh' },
+      { country: '이스라엘', city: '텔아비브', tz: 'Asia/Jerusalem' },
+      { country: '터키', city: '이스탄불', tz: 'Europe/Istanbul' },
+      { country: '러시아', city: '모스크바', tz: 'Europe/Moscow' },
+      { country: '카자흐스탄', city: '알마티', tz: 'Asia/Almaty' },
+      { country: '파키스탄', city: '카라치', tz: 'Asia/Karachi' },
+      { country: '케냐', city: '나이로비', tz: 'Africa/Nairobi' },
+      { country: '남아프리카 공화국', city: '요하네스버그', tz: 'Africa/Johannesburg' },
+      { country: '나이지리아', city: '라고스', tz: 'Africa/Lagos' },
+      { country: '이집트', city: '카이로', tz: 'Africa/Cairo' },
+      { country: '모로코', city: '카사블랑카', tz: 'Africa/Casablanca' },
+      { country: '영국', city: '런던', tz: 'Europe/London' },
+      { country: '아일랜드', city: '더블린', tz: 'Europe/Dublin' },
+      { country: '포르투갈', city: '리스본', tz: 'Europe/Lisbon' },
+      { country: '스페인', city: '마드리드', tz: 'Europe/Madrid' },
+      { country: '프랑스', city: '파리', tz: 'Europe/Paris' },
+      { country: '네덜란드', city: '암스테르담', tz: 'Europe/Amsterdam' },
+      { country: '독일', city: '베를린', tz: 'Europe/Berlin' },
+      { country: '스위스', city: '취리히', tz: 'Europe/Zurich' },
+      { country: '이탈리아', city: '로마', tz: 'Europe/Rome' },
+      { country: '스웨덴', city: '스톡홀름', tz: 'Europe/Stockholm' },
+      { country: '노르웨이', city: '오슬로', tz: 'Europe/Oslo' },
+      { country: '핀란드', city: '헬싱키', tz: 'Europe/Helsinki' },
+      { country: '폴란드', city: '바르샤바', tz: 'Europe/Warsaw' },
+      { country: '체코', city: '프라하', tz: 'Europe/Prague' },
+      { country: '오스트리아', city: '비엔나', tz: 'Europe/Vienna' },
+      { country: '그리스', city: '아테네', tz: 'Europe/Athens' },
+      { country: '아이슬란드', city: '레이캬비크', tz: 'Atlantic/Reykjavik' },
+      { country: '캐나다', city: '밴쿠버', tz: 'America/Vancouver' },
+      { country: '캐나다', city: '캘거리', tz: 'America/Edmonton' },
+      { country: '캐나다', city: '토론토', tz: 'America/Toronto' },
+      { country: '미국', city: '로스앤젤레스', tz: 'America/Los_Angeles' },
+      { country: '미국', city: '덴버', tz: 'America/Denver' },
+      { country: '미국', city: '시카고', tz: 'America/Chicago' },
+      { country: '미국', city: '뉴욕', tz: 'America/New_York' },
+      { country: '멕시코', city: '멕시코시티', tz: 'America/Mexico_City' },
+      { country: '쿠바', city: '아바나', tz: 'America/Havana' },
+      { country: '콜롬비아', city: '보고타', tz: 'America/Bogota' },
+      { country: '베네수엘라', city: '카라카스', tz: 'America/Caracas' },
+      { country: '페루', city: '리마', tz: 'America/Lima' },
+      { country: '칠레', city: '산티아고', tz: 'America/Santiago' },
+      { country: '브라질', city: '상파울루', tz: 'America/Sao_Paulo' },
+      { country: '아르헨티나', city: '부에노스아이레스', tz: 'America/Argentina/Buenos_Aires' },
+      { country: '우루과이', city: '몬테비데오', tz: 'America/Montevideo' },
+      { country: '볼리비아', city: '라파스', tz: 'America/La_Paz' },
+      { country: '파라과이', city: '아순시온', tz: 'America/Asuncion' },
+      { country: '뉴질랜드', city: '오클랜드', tz: 'Pacific/Auckland' },
+      { country: '호주', city: '퍼스', tz: 'Australia/Perth' },
+      { country: '호주', city: '시드니', tz: 'Australia/Sydney' },
+      { country: '호주', city: '멜버른', tz: 'Australia/Melbourne' },
+      { country: '호주', city: '브리즈번', tz: 'Australia/Brisbane' },
+      { country: '피지', city: '수바', tz: 'Pacific/Fiji' },
+      { country: '사모아', city: '아피아', tz: 'Pacific/Apia' },
+      { country: '미국', city: '호놀룰루', tz: 'Pacific/Honolulu' }
+    ];
+
+    const baseTimeEl = document.getElementById('base-time');
+    const baseDateEl = document.getElementById('base-date');
+    const baseDetailEl = document.getElementById('base-detail');
+    const gridEl = document.getElementById('clock-grid');
+    const formatToggle = document.getElementById('format-toggle');
+    const searchInput = document.getElementById('city-search');
+    const themeIconBtn = document.getElementById('theme-icon-btn');
+    const themeAutoBtn = document.getElementById('theme-auto-btn');
+    const openFullscreenBtn = document.getElementById('open-fullscreen');
+    const fullscreenOverlay = document.getElementById('fullscreen');
+    const closeFullscreenBtn = document.getElementById('close-fullscreen');
+    const fsThemeIconBtn = document.getElementById('fs-theme-icon-btn');
+    const fsBaseLocation = document.getElementById('fs-base-location');
+    const fsBaseTime = document.getElementById('fs-base-time');
+    const fsBaseDate = document.getElementById('fs-base-date');
+    const fsFavoritesEl = document.getElementById('fs-favorites');
+    const fsEmptyEl = document.getElementById('fs-empty');
+
+    const favorites = new Set();
+    const settings = { hourFormat: '24', theme: 'light', search: '', autoTheme: false };
+    let baseIndex = cities.findIndex(city => city.tz === 'Asia/Seoul');
+    if (baseIndex < 0) baseIndex = 0;
+
+    function parseOffset(label) {
+      const match = /GMT([+-])(\d{1,2})(?::?(\d{2}))?/.exec(label);
+      if (!match) return 0;
+      const sign = match[1] === '-' ? -1 : 1;
+      const hours = parseInt(match[2], 10);
+      const minutes = parseInt(match[3] || '0', 10);
+      return sign * (hours * 60 + minutes);
+    }
+
+    function offsetMinutes(tz, date) {
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'shortOffset'
+      });
+      const parts = fmt.formatToParts(date);
+      const tzName = parts.find(p => p.type === 'timeZoneName');
+      return tzName ? parseOffset(tzName.value) : 0;
+    }
+
+    function formatDate(tz, date) {
+      const datePart = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: tz,
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date);
+      const weekdayShort = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: tz,
+        weekday: 'short'
+      }).format(date).replace(/[^일월화수목금토]/g, '');
+      const weekdayMap = {
+        '일': '일요일',
+        '월': '월요일',
+        '화': '화요일',
+        '수': '수요일',
+        '목': '목요일',
+        '금': '금요일',
+        '토': '토요일'
+      };
+      const weekdayFull = weekdayMap[weekdayShort] || weekdayShort;
+      return `${datePart} (${weekdayFull})`;
+    }
+
+    function formatTime(tz, date) {
+      const is12 = settings.hourFormat === '12';
+      const formatter = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: is12
+      });
+      const parts = formatter.formatToParts(date);
+      if (!is12) {
+        return parts.map(p => p.value).join('');
+      }
+      const periodRaw = parts.find(p => p.type === 'dayPeriod')?.value || '';
+      const periodMap = { '오전': '오전', '오후': '오후' };
+      const period = periodMap[periodRaw] || periodRaw;
+      const timeText = parts.filter(p => p.type !== 'dayPeriod').map(p => p.value).join('');
+      return `<span class="period">${period}</span> ${timeText.trim()}`;
+    }
+
+    function diffLabel(diffMinutes, baseCity) {
+      if (diffMinutes === 0) return '기준과 동일';
+      const abs = Math.abs(diffMinutes);
+      const hours = Math.floor(abs / 60);
+      const mins = abs % 60;
+      let text = hours ? `${hours}시간` : '';
+      if (mins) text += ` ${mins}분`;
+      if (!text.trim()) text = '0분';
+      return diffMinutes > 0 ? `${baseCity}보다 ${text.trim()} 빠름` : `${baseCity}보다 ${text.trim()} 느림`;
+    }
+
+    function getCityByTz(tz) {
+      return cities.find(city => city.tz === tz);
+    }
+
+    function toggleFavorite(tz) {
+      if (!favorites.has(tz) && favorites.size >= 4) {
+        alert('즐겨찾기는 최대 4개까지 선택할 수 있습니다.');
+        return;
+      }
+      if (favorites.has(tz)) {
+        favorites.delete(tz);
+      } else {
+        favorites.add(tz);
+      }
+      updateFavoritesUI();
+      update();
+    }
+
+    function updateFavoritesUI() {
+      gridEl.querySelectorAll('.card').forEach(card => {
+        const originalOrder = Number(card.dataset.index);
+        const isFavorite = favorites.has(card.dataset.tz);
+        card.classList.toggle('favorite', isFavorite);
+        card.style.order = isFavorite ? -1 : originalOrder;
+        const button = card.querySelector('.favorite-btn');
+        if (button) {
+          button.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+          button.textContent = isFavorite ? '★' : '☆';
+        }
+      });
+    }
+
+    function filterCards() {
+      const query = settings.search;
+      gridEl.querySelectorAll('.card').forEach(card => {
+        const city = cities[Number(card.dataset.index)];
+        const target = (city.city + city.country).toLowerCase();
+        const match = !query || target.includes(query);
+        card.classList.toggle('hidden', !match);
+      });
+    }
+
+    function updateFullscreen(baseOffset, now) {
+      if (!fullscreenOverlay.classList.contains('visible')) return;
+      const baseCity = cities[baseIndex];
+      fsBaseLocation.textContent = `${baseCity.city} · ${baseCity.country}`;
+      const baseFormatted = formatTime(baseCity.tz, now);
+      fsBaseTime.innerHTML = baseFormatted.includes('<span') ? baseFormatted : `<span>${baseFormatted}</span>`;
+      fsBaseDate.textContent = formatDate(baseCity.tz, now);
+
+      const favoriteCities = [...favorites].map(getCityByTz).filter(Boolean);
+      fsFavoritesEl.innerHTML = '';
+
+      favoriteCities.forEach(city => {
+        const diff = offsetMinutes(city.tz, now) - baseOffset;
+        const card = document.createElement('article');
+        card.className = 'fs-fav-card';
+
+        const label = document.createElement('p');
+        label.className = 'fs-fav-meta';
+        label.textContent = city.country;
+
+        const cityName = document.createElement('h4');
+        cityName.className = 'fs-fav-city';
+        cityName.textContent = city.city;
+
+        const time = document.createElement('div');
+        time.className = 'fs-fav-time';
+        const favTime = formatTime(city.tz, now);
+        time.innerHTML = favTime.includes('<span') ? favTime : `<span>${favTime}</span>`;
+
+        const diffText = document.createElement('p');
+        diffText.className = 'fs-fav-meta';
+        diffText.textContent = diffLabel(diff, baseCity.city);
+
+        card.append(label, cityName, time, diffText);
+        fsFavoritesEl.appendChild(card);
+      });
+
+      fsEmptyEl.hidden = favoriteCities.length > 0;
+    }
+
+    function createCard(city, index) {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.dataset.index = String(index);
+      card.dataset.tz = city.tz;
+      card.style.order = index;
+
+      const favoriteBtn = document.createElement('button');
+      favoriteBtn.type = 'button';
+      favoriteBtn.className = 'favorite-btn';
+      favoriteBtn.setAttribute('aria-label', `${city.city} 즐겨찾기`);
+      favoriteBtn.setAttribute('aria-pressed', 'false');
+      favoriteBtn.textContent = '☆';
+      favoriteBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        toggleFavorite(city.tz);
+      });
+
+      const country = document.createElement('p');
+      country.className = 'country';
+      country.textContent = city.country;
+
+      const name = document.createElement('h3');
+      name.className = 'city';
+      name.textContent = city.city;
+
+      const offset = document.createElement('span');
+      offset.className = 'offset';
+      offset.dataset.offset = 'value';
+
+      const time = document.createElement('div');
+      time.className = 'time';
+      time.dataset.time = 'value';
+
+      const date = document.createElement('p');
+      date.className = 'date';
+      date.dataset.date = 'value';
+
+      card.append(favoriteBtn, offset, country, name, time, date);
+      return card;
+    }
+
+    function renderCards() {
+      gridEl.innerHTML = '';
+      cities.forEach((city, index) => {
+        const card = createCard(city, index);
+        card.addEventListener('click', () => {
+          baseIndex = index;
+          update();
+        });
+        gridEl.appendChild(card);
+      });
+      updateFavoritesUI();
+      filterCards();
+    }
+
+    function update() {
+      const now = new Date();
+      const baseCity = cities[baseIndex];
+      const baseOffset = offsetMinutes(baseCity.tz, now);
+
+      const baseTimeFormatted = formatTime(baseCity.tz, now);
+      baseTimeEl.innerHTML = baseTimeFormatted.includes('<span') ? baseTimeFormatted : baseTimeFormatted;
+      baseDateEl.textContent = `${formatDate(baseCity.tz, now)} · ${baseCity.city} · ${baseCity.country}`;
+      baseDetailEl.textContent = `${baseCity.city} 시간을 기준으로 전 세계 시차를 비교합니다.`;
+
+      gridEl.querySelectorAll('.card').forEach(card => {
+        const cityIndex = Number(card.dataset.index);
+        const city = cities[cityIndex];
+        const timeEl = card.querySelector('[data-time]');
+        const dateEl = card.querySelector('[data-date]');
+        const offsetEl = card.querySelector('[data-offset]');
+
+        const formattedTime = formatTime(city.tz, now);
+        if (formattedTime.includes('<span')) {
+          timeEl.innerHTML = formattedTime;
+        } else {
+          timeEl.textContent = formattedTime;
+        }
+        dateEl.textContent = formatDate(city.tz, now);
+
+        const diff = offsetMinutes(city.tz, now) - baseOffset;
+        card.classList.toggle('active', cityIndex === baseIndex);
+        offsetEl.className = 'offset';
+
+        if (cityIndex === baseIndex) {
+          offsetEl.textContent = '기준 시간';
+          offsetEl.classList.add('base');
+        } else {
+          offsetEl.textContent = diffLabel(diff, baseCity.city);
+          if (diff === 0) {
+            offsetEl.classList.add('neutral');
+          } else if (diff < 0) {
+            offsetEl.classList.add('negative');
+          }
+        }
+      });
+
+      updateFavoritesUI();
+      updateFullscreen(baseOffset, now);
+      if (settings.autoTheme) applyTheme();
+    }
+
+    function initSegments() {
+      formatToggle.addEventListener('click', event => {
+        const target = event.target.closest('button[data-format]');
+        if (!target || target.classList.contains('active')) return;
+        settings.hourFormat = target.dataset.format;
+        formatToggle.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === target));
+        update();
+      });
+
+    }
+
+    function initSearch() {
+      if (!searchInput) return;
+      searchInput.addEventListener('input', () => {
+        settings.search = searchInput.value.trim().toLowerCase();
+        filterCards();
+      });
+    }
+
+    function applyTheme() {
+      const now = new Date();
+      const hour = now.getHours();
+      const activeTheme = settings.autoTheme ? (hour >= 6 && hour < 18 ? 'light' : 'dark') : settings.theme;
+      document.body.dataset.theme = activeTheme;
+      updateThemeButtons(activeTheme);
+    }
+
+    function updateThemeButtons(activeTheme) {
+      if (themeIconBtn) {
+        themeIconBtn.textContent = activeTheme === 'dark' ? '🌙' : '☀';
+      }
+      if (themeAutoBtn) {
+        themeAutoBtn.classList.toggle('active', settings.autoTheme);
+      }
+      if (fsThemeIconBtn) {
+        fsThemeIconBtn.textContent = activeTheme === 'dark' ? '🌙' : '☀';
+      }
+    }
+
+    function showFullscreenOverlay() {
+      fullscreenOverlay.classList.add('visible');
+      fullscreenOverlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('no-scroll');
+      update();
+    }
+
+    function hideFullscreenOverlay() {
+      fullscreenOverlay.classList.remove('visible');
+      fullscreenOverlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('no-scroll');
+    }
+
+    function initFullscreen() {
+      if (!openFullscreenBtn || !closeFullscreenBtn) return;
+
+      openFullscreenBtn.addEventListener('click', async () => {
+        showFullscreenOverlay();
+        if (fullscreenOverlay.requestFullscreen) {
+          try {
+            await fullscreenOverlay.requestFullscreen();
+          } catch (err) {
+            console.warn('전체 화면 진입 실패', err);
+          }
+        }
+      });
+
+      closeFullscreenBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+        hideFullscreenOverlay();
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          hideFullscreenOverlay();
+        }
+      });
+
+      if (fsThemeIconBtn) {
+        fsThemeIconBtn.addEventListener('click', () => {
+          settings.autoTheme = false;
+          const current = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+          settings.theme = current === 'dark' ? 'light' : 'dark';
+          applyTheme();
+        });
+      }
+    }
+
+    function initThemeControls() {
+      if (themeIconBtn) {
+        themeIconBtn.addEventListener('click', () => {
+          settings.autoTheme = false;
+          const current = document.body.dataset.theme === 'dark' ? 'dark' : 'light';
+          settings.theme = current === 'dark' ? 'light' : 'dark';
+          applyTheme();
+        });
+      }
+      if (themeAutoBtn) {
+        themeAutoBtn.addEventListener('click', () => {
+          settings.autoTheme = !settings.autoTheme;
+          applyTheme();
+        });
+      }
+    }
+
+    function startClock() {
+      renderCards();
+      initSegments();
+      initSearch();
+      initThemeControls();
+      initFullscreen();
+      applyTheme();
+      update();
+      setInterval(update, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', startClock);
+  </script>
+</body>
+</html>
