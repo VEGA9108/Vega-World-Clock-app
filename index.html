@@ -440,9 +440,10 @@
     }
 
     .fullscreen-content {
-      width: clamp(700px, 90vw, 1400px);
-      height: clamp(480px, 85vh, 900px);
+      width: min(92vw, 1400px);
       max-width: 1400px;
+      height: auto;
+      max-height: 92vh;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 32px;
@@ -450,13 +451,13 @@
       box-shadow: 0 40px 80px rgba(0, 0, 0, 0.35);
       position: relative;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: clamp(20px, 4vw, 48px);
+      justify-content: center;
+      gap: clamp(16px, 3vw, 32px);
       backdrop-filter: blur(20px);
       color: var(--text);
-      overflow: hidden;
+      overflow: visible;
     }
 
     .close-fullscreen {
@@ -497,8 +498,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      flex: 1 1 60%;
-      max-width: 60%;
+      width: 100%;
       align-items: center;
       justify-content: center;
     }
@@ -517,10 +517,13 @@
     }
 
     .fs-base-time {
-      font-size: min(18vw, 22vh);
+      font-size: clamp(48px, 14vw, 140px);
       font-weight: 700;
       letter-spacing: -2px;
       color: var(--text);
+      max-width: 100%;
+      line-height: 1.05;
+      word-break: break-word;
     }
 
     body[data-theme="chzzk"] .fs-base-time {
@@ -534,18 +537,19 @@
     }
 
     .fs-favorites {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1 1 35%;
-      max-height: 70vh;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      width: 100%;
+      max-height: 40vh;
       overflow-y: auto;
       padding-right: 4px;
+      align-items: start;
     }
 
     .fs-fav-card {
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 14px;
+      padding: 10px;
       border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.8);
       text-align: center;
@@ -562,16 +566,16 @@
     }
 
     .fs-fav-city {
-      margin: 4px 0 0;
-      font-size: 16px;
+      margin: 2px 0 0;
+      font-size: 15px;
       font-weight: 700;
       color: var(--fs-text, var(--text));
     }
 
     .fs-fav-time {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
-      margin: 6px 0;
+      margin: 4px 0;
       color: var(--fs-text, var(--text));
     }
 
@@ -596,7 +600,7 @@
 
     .fs-fav-meta {
       margin: 0;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
     }
 
@@ -605,7 +609,7 @@
       text-align: center;
       color: var(--fs-text, var(--muted));
       opacity: 0.7;
-      font-size: 13px;
+      font-size: 12px;
     }
 
 
